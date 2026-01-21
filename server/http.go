@@ -19,9 +19,10 @@ var wasmExecJS []byte
 
 // App is the main Forge application.
 type App struct {
-	sessions *SessionManager
-	router   *Router
-	uploads  map[string]UploadHandler
+	sessions   *SessionManager
+	router     *Router
+	uploads    map[string]UploadHandler
+	middleware []Middleware
 }
 
 // LayoutFunc wraps a page with layout.
@@ -122,5 +123,9 @@ const go=new Go();WebAssembly.instantiateStreaming(fetch("/forge.wasm"),go.impor
 // Run starts the server.
 func (a *App) Run(addr string) error {
 	fmt.Printf("Forge running at http://localhost%s\n", addr)
-	return http.ListenAndServe(addr, a)
+	var handler http.Handler = a
+	for i := len(a.middleware) - 1; i >= 0; i-- {
+		handler = a.middleware[i](handler)
+	}
+	return http.ListenAndServe(addr, handler)
 }
