@@ -78,7 +78,7 @@ func newProject(name string) {
 
 go 1.25
 
-require forge v1.0.0
+require github.com/Shravanthh/forge v1.0.0
 `, name)
 	
 	if forgePath != "" {
@@ -91,8 +91,8 @@ require forge v1.0.0
 	writeFile(filepath.Join(name, "main.go"), `package main
 
 import (
-	"forge"
-	"forge/ui"
+	"github.com/Shravanthh/forge"
+	"github.com/Shravanthh/forge/ui"
 )
 
 func init() {
