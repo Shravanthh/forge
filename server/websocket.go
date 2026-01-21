@@ -6,10 +6,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"forge/ctx"
-	"forge/diff"
-	"forge/render"
-	"forge/ui"
+	"github.com/Shravanthh/forge/ctx"
+	"github.com/Shravanthh/forge/diff"
+	"github.com/Shravanthh/forge/render"
+	"github.com/Shravanthh/forge/ui"
 
 	"github.com/gorilla/websocket"
 )

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"forge/ctx"
-	"forge/render"
-	"forge/ui"
+	"github.com/Shravanthh/forge/ctx"
+	"github.com/Shravanthh/forge/render"
+	"github.com/Shravanthh/forge/ui"
 )
 
 //go:embed wasm/forge.wasm

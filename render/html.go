@@ -1,3 +1,4 @@
+// Package render converts UI trees to HTML strings.
 package render
 
 import (
@@ -5,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"forge/ui"
+	"github.com/Shravanthh/forge/ui"
 )
 
 var selfClosing = map[string]bool{
@@ -13,7 +14,12 @@ var selfClosing = map[string]bool{
 	"meta": true, "link": true, "area": true, "base": true,
 }
 
-// HTML renders a UI tree to HTML string with forge IDs.
+// HTML renders a UI tree to an HTML string.
+// Each element receives a data-forge-id attribute for DOM patching.
+//
+//	tree := ui.Div(ui.H1(ui.T("Hello")))
+//	html := render.HTML(tree)
+//	// <div data-forge-id="0"><h1 data-forge-id="0.0">Hello</h1></div>
 func HTML(node ui.UI) string {
 	var b strings.Builder
 	b.Grow(4096)

@@ -1,6 +1,6 @@
 package ui
 
-import "forge/ctx"
+import "github.com/Shravanthh/forge/ctx"
 
 import "strconv"
 

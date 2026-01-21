@@ -1,33 +1,41 @@
+// Package diff computes the differences between two UI trees
+// and generates patches for efficient DOM updates.
 package diff
 
 import (
 	"strconv"
 
-	"forge/render"
-	"forge/ui"
+	"github.com/Shravanthh/forge/render"
+	"github.com/Shravanthh/forge/ui"
 )
 
-// PatchType defines the type of DOM patch.
+// PatchType defines the type of DOM modification.
 type PatchType string
 
 const (
-	Replace    PatchType = "replace"
-	UpdateAttr PatchType = "attrs"
-	UpdateText PatchType = "text"
-	Insert     PatchType = "insert"
-	Remove     PatchType = "remove"
+	Replace    PatchType = "replace" // Replace entire element
+	UpdateAttr PatchType = "attrs"   // Update attributes only
+	UpdateText PatchType = "text"    // Update text content
+	Insert     PatchType = "insert"  // Insert new element
+	Remove     PatchType = "remove"  // Remove element
 )
 
-// Patch represents a DOM modification.
+// Patch represents a single DOM modification to be applied by the client.
 type Patch struct {
-	Type  PatchType         `json:"type"`
-	ID    string            `json:"id"`
-	HTML  string            `json:"html,omitempty"`
-	Attrs map[string]string `json:"attrs,omitempty"`
-	Text  string            `json:"text,omitempty"`
+	Type  PatchType         `json:"type"`            // Type of patch
+	ID    string            `json:"id"`              // Target element ID
+	HTML  string            `json:"html,omitempty"`  // New HTML (for replace/insert)
+	Attrs map[string]string `json:"attrs,omitempty"` // Changed attributes
+	Text  string            `json:"text,omitempty"`  // New text content
 }
 
-// Diff compares two UI trees and returns patches.
+// Diff compares two UI trees and returns the minimal set of patches
+// needed to transform the old tree into the new tree.
+//
+//	oldUI := ui.Div(ui.T("Hello"))
+//	newUI := ui.Div(ui.T("World"))
+//	patches := diff.Diff(oldUI, newUI)
+//	// [{Type: "text", ID: "0.0", Text: "World"}]
 func Diff(oldUI, newUI ui.UI) []Patch {
 	return diffNode(oldUI, newUI, "0")
 }
