@@ -39,6 +39,7 @@ Open http://localhost:3000
 - [Components](docs/components.md)
 - [Events](docs/events.md)
 - [Forms](docs/forms.md)
+- [HTTP Client](docs/http.md)
 - [File Uploads](docs/uploads.md)
 - [Drag & Drop](docs/dragdrop.md)
 - [Virtual Scrolling](docs/virtual-scrolling.md)
