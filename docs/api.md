@@ -258,6 +258,33 @@ func (m *MemoryStore) Save(id string, state map[string]any) error
 func (m *MemoryStore) Load(id string) (map[string]any, error)
 ```
 
+### HTTP Client Methods
+
+```go
+func (c *Context) Fetch(url string) ([]byte, error)
+func (c *Context) FetchJSON(url string, result any) error
+func (c *Context) Post(url string, body any) ([]byte, error)
+func (c *Context) PostJSON(url string, body, result any) error
+func (c *Context) Request(method, url string, body any, headers map[string]string) ([]byte, error)
+```
+
+### API Client
+
+```go
+type API struct {
+    BaseURL string
+    Headers map[string]string
+}
+
+func NewAPI(baseURL string) *API
+func (a *API) SetHeader(key, value string) *API
+func (a *API) SetAuth(token string) *API
+func (a *API) Get(c *Context, path string, result any) error
+func (a *API) Post(c *Context, path string, body, result any) error
+func (a *API) Put(c *Context, path string, body, result any) error
+func (a *API) Delete(c *Context, path string, result any) error
+```
+
 ---
 
 ## Package `forge/server`
