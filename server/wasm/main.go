@@ -56,10 +56,8 @@ func setupEvents(doc js.Value) {
 		evt := args[0]
 		target := evt.Get("target")
 		
-		// Check if it's an element with data-forge-click
 		el := closest(target, "[data-forge-click]")
 		if !el.IsNull() {
-			// Don't prevent default for checkboxes - let them toggle
 			if el.Get("type").String() != "checkbox" {
 				evt.Call("preventDefault")
 			}
@@ -78,7 +76,7 @@ func setupEvents(doc js.Value) {
 		return nil
 	}))
 
-	// Keydown events (Enter key)
+	// Keydown events
 	doc.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) any {
 		evt := args[0]
 		if evt.Get("key").String() == "Enter" {
@@ -92,7 +90,7 @@ func setupEvents(doc js.Value) {
 		return nil
 	}))
 
-	// Change events (checkboxes)
+	// Change events
 	doc.Call("addEventListener", "change", js.FuncOf(func(this js.Value, args []js.Value) any {
 		target := args[0].Get("target")
 		id := target.Get("dataset").Get("forgeChange")
@@ -105,6 +103,57 @@ func setupEvents(doc js.Value) {
 				}
 			}
 			send(id.String(), val)
+		}
+		return nil
+	}))
+
+	// Scroll events (debounced)
+	var scrollTimer js.Value
+	doc.Call("addEventListener", "scroll", js.FuncOf(func(this js.Value, args []js.Value) any {
+		target := args[0].Get("target")
+		id := target.Get("dataset").Get("forgeScroll")
+		if !id.IsUndefined() {
+			if !scrollTimer.IsUndefined() {
+				js.Global().Call("clearTimeout", scrollTimer)
+			}
+			scrollTimer = js.Global().Call("setTimeout", js.FuncOf(func(this js.Value, args []js.Value) any {
+				sendScroll(id.String(), target.Get("scrollTop").Int())
+				return nil
+			}), 100)
+		}
+		return nil
+	}), true)
+
+	// Drag and drop
+	var dragID string
+	doc.Call("addEventListener", "dragstart", js.FuncOf(func(this js.Value, args []js.Value) any {
+		target := args[0].Get("target")
+		id := target.Get("dataset").Get("forgeDrag")
+		if !id.IsUndefined() {
+			dragID = id.String()
+		}
+		return nil
+	}))
+
+	doc.Call("addEventListener", "dragover", js.FuncOf(func(this js.Value, args []js.Value) any {
+		evt := args[0]
+		target := evt.Get("target")
+		if closest(target, "[data-forge-dropzone]").Truthy() {
+			evt.Call("preventDefault")
+		}
+		return nil
+	}))
+
+	doc.Call("addEventListener", "drop", js.FuncOf(func(this js.Value, args []js.Value) any {
+		evt := args[0]
+		evt.Call("preventDefault")
+		target := closest(evt.Get("target"), "[data-forge-dropzone]")
+		if !target.IsNull() {
+			id := target.Get("dataset").Get("forgeDrop")
+			if !id.IsUndefined() && dragID != "" {
+				sendDrop(id.String(), dragID)
+				dragID = ""
+			}
 		}
 		return nil
 	}))
@@ -165,6 +214,24 @@ func send(id, value string) {
 		return
 	}
 	msg := map[string]string{"type": "event", "id": id, "value": value}
+	data, _ := json.Marshal(msg)
+	ws.Call("send", string(data))
+}
+
+func sendScroll(id string, scrollTop int) {
+	if ws.Get("readyState").Int() != 1 {
+		return
+	}
+	msg := map[string]any{"type": "scroll", "id": id, "scrollTop": scrollTop}
+	data, _ := json.Marshal(msg)
+	ws.Call("send", string(data))
+}
+
+func sendDrop(id, dragID string) {
+	if ws.Get("readyState").Int() != 1 {
+		return
+	}
+	msg := map[string]string{"type": "drop", "id": id, "dragId": dragID}
 	data, _ := json.Marshal(msg)
 	ws.Call("send", string(data))
 }

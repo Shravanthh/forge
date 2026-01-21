@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Shravanthh/forge/ctx"
 	"github.com/Shravanthh/forge/render"
@@ -20,6 +21,7 @@ var wasmExecJS []byte
 type App struct {
 	sessions *SessionManager
 	router   *Router
+	uploads  map[string]UploadHandler
 }
 
 // LayoutFunc wraps a page with layout.
@@ -30,6 +32,7 @@ func New() *App {
 	return &App{
 		sessions: NewSessionManager(nil),
 		router:   NewRouter(),
+		uploads:  make(map[string]UploadHandler),
 	}
 }
 
@@ -42,6 +45,12 @@ func (a *App) Layout(prefix string, layout LayoutFunc) { a.router.AddLayout(pref
 // ServeHTTP implements http.Handler.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
+
+	// File uploads
+	if handler, ok := a.uploads[path]; ok {
+		handleUpload(w, r, handler)
+		return
+	}
 
 	switch path {
 	case "/forge.wasm":
@@ -81,6 +90,16 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func wrapHTML(body string) string {
+	var headScripts, bodyScripts strings.Builder
+	for _, s := range ui.GetHeadScripts() {
+		headScripts.WriteString(s)
+		headScripts.WriteByte('\n')
+	}
+	for _, s := range ui.GetBodyScripts() {
+		bodyScripts.WriteString(s)
+		bodyScripts.WriteByte('\n')
+	}
+
 	return `<!DOCTYPE html>
 <html>
 <head>
@@ -88,9 +107,11 @@ func wrapHTML(body string) string {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Forge App</title>
 <style>` + ui.GetCSS() + `</style>
+` + headScripts.String() + `
 </head>
 <body>
 ` + body + `
+` + bodyScripts.String() + `
 <script>` + string(wasmExecJS) + `
 const go=new Go();WebAssembly.instantiateStreaming(fetch("/forge.wasm"),go.importObject).then(r=>go.run(r.instance));
 </script>

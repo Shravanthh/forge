@@ -29,9 +29,11 @@ type Session struct {
 
 // Message from client.
 type Message struct {
-	Type  string `json:"type"`
-	ID    string `json:"id"`
-	Value string `json:"value"`
+	Type      string `json:"type"`
+	ID        string `json:"id"`
+	Value     string `json:"value"`
+	ScrollTop int    `json:"scrollTop"`
+	DragID    string `json:"dragId"`
 }
 
 // Response to client.
@@ -132,7 +134,14 @@ func (sm *SessionManager) HandleWebSocket(page PageFunc, params map[string]strin
 			if err := conn.ReadJSON(&msg); err != nil {
 				break
 			}
-			if msg.Type == "event" {
+			switch msg.Type {
+			case "event":
+				sm.handleEvent(session, msg)
+			case "scroll":
+				session.Context.Set("_scroll_top", msg.ScrollTop)
+				sm.handleEvent(session, msg)
+			case "drop":
+				session.Context.Set("_drag_id", msg.DragID)
 				sm.handleEvent(session, msg)
 			}
 		}
