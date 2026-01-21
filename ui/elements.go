@@ -69,6 +69,15 @@ func Li(children ...UI) Element { return el("li", children...) }
 
 // Table elements
 
+// Table creates a <table> element.
+func Table(children ...UI) Element { return el("table", children...) }
+
+// Thead creates a <thead> element.
+func Thead(children ...UI) Element { return el("thead", children...) }
+
+// Tbody creates a <tbody> element.
+func Tbody(children ...UI) Element { return el("tbody", children...) }
+
 // Tr creates a <tr> table row element.
 func Tr(children ...UI) Element { return el("tr", children...) }
 
@@ -77,6 +86,17 @@ func Th(children ...UI) Element { return el("th", children...) }
 
 // Td creates a <td> table data cell element.
 func Td(children ...UI) Element { return el("td", children...) }
+
+// Form elements
+
+// Select creates a <select> element.
+func Select(children ...UI) Element { return el("select", children...) }
+
+// Option creates an <option> element.
+func Option(children ...UI) Element { return el("option", children...) }
+
+// Textarea creates a <textarea> element.
+func Textarea() Element { return Element{Tag: "textarea"} }
 
 // Self-closing elements
 

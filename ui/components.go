@@ -55,13 +55,13 @@ func Avatar(src, alt string) Element {
 
 // Data components
 
-// Table creates a table from headers and rows.
-func Table(headers []string, rows [][]UI) Element {
+// DataTable creates a table from headers and rows.
+func DataTable(headers []string, rows [][]UI) Element {
 	var ths []UI
 	for _, h := range headers {
 		ths = append(ths, Th(T(h)))
 	}
-	thead := El("thead", Tr(ths...))
+	thead := Thead(Tr(ths...))
 
 	var trs []UI
 	for _, row := range rows {
@@ -71,9 +71,9 @@ func Table(headers []string, rows [][]UI) Element {
 		}
 		trs = append(trs, Tr(tds...))
 	}
-	tbody := El("tbody", trs...)
+	tbody := Tbody(trs...)
 
-	return El("table", thead, tbody).WithClass("table")
+	return Table(thead, tbody).WithClass("table")
 }
 
 // Interactive components
