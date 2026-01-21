@@ -43,6 +43,9 @@ func main() {
 	// Setup event delegation
 	setupEvents(doc)
 
+	// Setup lazy loading
+	setupLazyLoading(doc)
+
 	// Connect WebSocket
 	connect()
 
@@ -408,4 +411,87 @@ func parentPath(path string) string {
 		}
 	}
 	return "0"
+}
+
+func setupLazyLoading(doc js.Value) {
+	// Intersection observer for lazy components
+	callback := js.FuncOf(func(this js.Value, args []js.Value) any {
+		entries := args[0]
+		for i := 0; i < entries.Length(); i++ {
+			entry := entries.Index(i)
+			if entry.Get("isIntersecting").Bool() {
+				target := entry.Get("target")
+				id := target.Get("dataset").Get("forgeVisible")
+				if !id.IsUndefined() {
+					send(id.String(), "")
+				}
+			}
+		}
+		return nil
+	})
+
+	opts := map[string]any{"threshold": 0.1}
+	optsJS := js.Global().Get("Object").New()
+	optsJS.Set("threshold", opts["threshold"])
+
+	observer := js.Global().Get("IntersectionObserver").New(callback, optsJS)
+
+	// Observe existing lazy elements
+	elements := doc.Call("querySelectorAll", "[data-forge-visible]")
+	for i := 0; i < elements.Length(); i++ {
+		observer.Call("observe", elements.Index(i))
+	}
+
+	// Observe new elements via MutationObserver
+	mutationCb := js.FuncOf(func(this js.Value, args []js.Value) any {
+		mutations := args[0]
+		for i := 0; i < mutations.Length(); i++ {
+			added := mutations.Index(i).Get("addedNodes")
+			for j := 0; j < added.Length(); j++ {
+				node := added.Index(j)
+				if node.Get("nodeType").Int() == 1 {
+					if !node.Get("dataset").Get("forgeVisible").IsUndefined() {
+						observer.Call("observe", node)
+					}
+					lazy := node.Call("querySelectorAll", "[data-forge-visible]")
+					for k := 0; k < lazy.Length(); k++ {
+						observer.Call("observe", lazy.Index(k))
+					}
+				}
+			}
+		}
+		return nil
+	})
+
+	mutationOpts := js.Global().Get("Object").New()
+	mutationOpts.Set("childList", true)
+	mutationOpts.Set("subtree", true)
+
+	mutationObserver := js.Global().Get("MutationObserver").New(mutationCb)
+	mutationObserver.Call("observe", doc.Get("body"), mutationOpts)
+
+	// Lazy images
+	imgCallback := js.FuncOf(func(this js.Value, args []js.Value) any {
+		entries := args[0]
+		imgObserver := args[1]
+		for i := 0; i < entries.Length(); i++ {
+			entry := entries.Index(i)
+			if entry.Get("isIntersecting").Bool() {
+				img := entry.Get("target")
+				src := img.Get("dataset").Get("src")
+				if !src.IsUndefined() {
+					img.Set("src", src.String())
+					img.Get("classList").Call("add", "loaded")
+					imgObserver.Call("unobserve", img)
+				}
+			}
+		}
+		return nil
+	})
+
+	imgObserver := js.Global().Get("IntersectionObserver").New(imgCallback, optsJS)
+	images := doc.Call("querySelectorAll", ".lazy-image")
+	for i := 0; i < images.Length(); i++ {
+		imgObserver.Call("observe", images.Index(i))
+	}
 }
